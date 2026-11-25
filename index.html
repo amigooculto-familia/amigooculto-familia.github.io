@@ -54,7 +54,7 @@ h1 .s{display:block;font:400 clamp(42px,6.5vw,68px)/1.1 "Great Vibes",cursive;co
 .panel+.panel{margin-top:18px}
 h2{font:700 clamp(26px,3.4vw,32px)/1.1 Fraunces,Georgia,serif;margin:0 0 6px;color:#fff}
 .hint{color:var(--muted);font-size:15px;margin:0 0 18px}
-.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .nm{min-height:58px;border:1px dashed var(--line);background:rgba(0,0,0,.2);color:#fff;border-radius:14px;font:600 17px Outfit,sans-serif;cursor:pointer;padding:8px 10px;transition:background .2s,border-color .2s,transform .2s}
 .nm:hover{background:rgba(242,195,91,.12);border-color:var(--gold);transform:translateY(-2px)}
 .nm small{display:block;font:500 12px Outfit,sans-serif;color:var(--gold);letter-spacing:.04em}
@@ -142,6 +142,16 @@ select option{background:#2a0710}
 .xbtn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#ffd0d6;font:600 18px Outfit,sans-serif;cursor:pointer}
 .xbtn.armed{width:auto;padding:0 10px;border-radius:999px;background:#8f1526;color:#fff;font-size:13px}
 @media(max-width:420px){.addrow{grid-template-columns:minmax(0,1fr)}}
+.av{flex:none;width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:linear-gradient(180deg,#ffe9a8,#d9a23f);display:grid;place-items:center;font:700 19px Fraunces,serif;color:#3b1d02;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.nm{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 10px}
+.nm .nmt{min-width:0;overflow-wrap:anywhere;line-height:1.2}
+.plist .av{width:34px;height:34px;font-size:15px;border-width:1.5px}
+.plist .who2{display:flex;align-items:center;gap:8px;min-width:0}
+.bigav{width:clamp(84px,24vw,104px);height:clamp(84px,24vw,104px);font-size:38px;border-width:3px;margin:0 auto 8px;box-shadow:0 0 0 5px rgba(242,195,91,.18),0 0 34px rgba(242,195,91,.45)}
+#whoAv:empty{display:none}
+.frh{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.frh h2{margin:0}
+.pinav{width:64px;height:64px;font-size:26px;margin:0 auto 8px}
 .music{font-size:13px;color:var(--muted);margin:10px 0 0}
 .foot{grid-column:1/-1;text-align:center;color:rgba(230,201,180,.6);font-size:13px;margin-top:10px}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:8px}.mroad{display:block;margin:0 0 12px}}
@@ -189,6 +199,7 @@ select option{background:#2a0710}
     <!-- 2. senha -->
     <div id="vPin" class="view panel center">
       <div class="road" id="road" aria-hidden="true"><div class="walker"><img src="papai-noel.png" alt=""></div></div>
+      <div id="pinAv"></div>
       <h2 id="pinT">Oi!</h2>
       <p class="hint" id="pinH"></p>
       <form id="fPin" autocomplete="off">
@@ -226,6 +237,7 @@ select option{background:#2a0710}
               <div class="slot" id="slot">está aqui dentro</div>
             </div>
             <div class="face back">
+              <div id="whoAv"></div>
               <div class="cap">Você tirou</div>
               <div class="who" id="who"></div>
               <div class="sub">Guarde segredo até a troca!</div>
@@ -238,7 +250,7 @@ select option{background:#2a0710}
       </div>
 
       <div class="panel" id="cFriend" style="display:none">
-        <h2 id="frT">O que gostaria de ganhar</h2>
+        <div class="frh"><span id="frAv"></span><h2 id="frT">O que gostaria de ganhar</h2></div>
         <ul class="wish" id="frList"></ul>
         <p class="hint" id="frEmpty" style="display:none;margin:0">Ainda não colocou as opções. Entre de novo mais tarde pra ver.</p>
       </div>
@@ -312,6 +324,13 @@ const ERR = {
   REDE: 'Sem conexão. Confira a internet e tente de novo.'
 };
 let me = {nome:'', pin:''}, pessoas = [], saved3 = false;
+const FOTOS = {fernanda:'fernanda', 'maria fernanda':'fernanda', amanda:'amanda', bethania:'bethania', alessandro:'alessandro', luan:'luan', luiz:'luiz', 'luiz mauricio':'luiz', nalanda:'nalanda', nicolas:'nicolas'};
+const keyOf = n => String(n).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const avatar = (nome, cls) => {
+  const f = FOTOS[keyOf(nome)];
+  if (f) { const i = document.createElement('img'); i.className = 'av' + (cls ? ' ' + cls : ''); i.src = 'fotos/' + f + '.jpg'; i.alt = ''; i.loading = 'lazy'; return i; }
+  const sp = document.createElement('span'); sp.className = 'av' + (cls ? ' ' + cls : ''); sp.setAttribute('aria-hidden','true'); sp.textContent = (String(nome).trim()[0] || '?').toUpperCase(); return sp;
+};
 const IDEAS = ['Carteira','Capa de celular','Perfume','Caneca personalizada','Livro','Chocolate fino','Camiseta','Meias divertidas','Fone de ouvido','Garrafa térmica','Necessaire','Kit de skincare','Hidratante','Vela aromática','Porta-retrato','Chinelo','Boné','Pantufa','Pijama','Jogo de tabuleiro','Kit churrasco','Cinto','Óculos de sol','Carregador portátil','Agenda 2027','Planta suculenta','Bolsa pequena','Kit de unhas','Copo térmico','Avental de cozinha','Mousepad','Toalha de praia'];
 
 /* ---------- neve ---------- */
@@ -512,8 +531,9 @@ const loadNames = async () => {
     const box = $('names'); box.textContent = '';
     pessoas.forEach(p => {
       const b = document.createElement('button'); b.className = 'nm'; b.type = 'button';
-      b.textContent = p.nome;
-      if (p.cadastrado) { const s = document.createElement('small'); s.textContent = 'já tem senha'; b.append(s); }
+      const t = document.createElement('span'); t.className = 'nmt'; t.textContent = p.nome;
+      if (p.cadastrado) { const s = document.createElement('small'); s.textContent = 'já tem senha'; t.append(s); }
+      b.append(avatar(p.nome), t);
       b.addEventListener('click', () => pickName(p));
       box.append(b);
     });
@@ -524,6 +544,7 @@ const loadNames = async () => {
 const pickName = p => {
   me = {nome:p.nome, pin:'', novo:!p.cadastrado};
   $('pinT').textContent = 'Oi, ' + p.nome + '!';
+  $('pinAv').textContent = ''; $('pinAv').append(avatar(p.nome, 'pinav'));
   $('pinH').textContent = me.novo ? 'Primeira vez aqui. Crie uma senha de 4 números só sua, pra ninguém mais entrar no seu nome.' : 'O Papai Noel está esperando a sua senha.';
   $('pinL1').textContent = me.novo ? 'Crie sua senha' : 'Sua senha';
   $('pin2Box').style.display = me.novo ? 'block' : 'none';
@@ -577,6 +598,8 @@ const fill = d => {
 };
 const showFriend = (a, animate) => {
   $('who').textContent = a.nome;
+  $('whoAv').textContent = ''; $('whoAv').append(avatar(a.nome, 'bigav'));
+  $('frAv').textContent = ''; $('frAv').append(avatar(a.nome));
   const st = $('stage'), fl = st.querySelector('.flip');
   st.classList.remove('rolling');
   if (!animate) fl.style.transition = 'none';
@@ -696,9 +719,10 @@ const renderAdminList = () => {
   pessoas.forEach(p => {
     const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome; sel.append(o);
     const li = document.createElement('li');
+    const wrap = document.createElement('span'); wrap.className = 'who2';
     const sp = document.createElement('span'); sp.textContent = p.nome;
     if (p.nome === me.nome) { const em = document.createElement('em'); em.textContent = ' (você)'; sp.append(em); }
-    li.append(sp);
+    wrap.append(avatar(p.nome), sp); li.append(wrap);
     if (p.nome !== me.nome) {
       const x = document.createElement('button'); x.type = 'button'; x.className = 'xbtn'; x.textContent = '×'; x.setAttribute('aria-label', 'Tirar ' + p.nome);
       x.addEventListener('click', async () => {
