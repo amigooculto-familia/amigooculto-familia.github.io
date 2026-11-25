@@ -152,6 +152,12 @@ select option{background:#2a0710}
 .frh{display:flex;align-items:center;gap:12px;margin:0 0 12px}
 .frh h2{margin:0}
 .pinav{width:64px;height:64px;font-size:26px;margin:0 auto 8px}
+.sizes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin:4px 0 16px;padding-top:14px;border-top:1px dashed rgba(242,195,91,.25)}
+.sizes .opt{grid-column:1/-1;margin:0;font-size:14px;color:var(--muted)}
+.szs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.szs span{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(242,195,91,.08);font-size:15px}
+.szs b{color:var(--gold);font-weight:600}
+.szs:empty{display:none}
 .music{font-size:13px;color:var(--muted);margin:10px 0 0}
 .foot{grid-column:1/-1;text-align:center;color:rgba(230,201,180,.6);font-size:13px;margin-top:10px}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:8px}.mroad{display:block;margin:0 0 12px}}
@@ -252,6 +258,7 @@ select option{background:#2a0710}
       <div class="panel" id="cFriend" style="display:none">
         <div class="frh"><span id="frAv"></span><h2 id="frT">O que gostaria de ganhar</h2></div>
         <ul class="wish" id="frList"></ul>
+        <div class="szs" id="frSz"></div>
         <p class="hint" id="frEmpty" style="display:none;margin:0">Ainda não colocou as opções. Entre de novo mais tarde pra ver.</p>
       </div>
 
@@ -265,6 +272,11 @@ select option{background:#2a0710}
           <div class="f"><label for="o1">Opção 1</label><input id="o1" maxlength="100" placeholder="ex.: perfume, livro, caneca..."></div>
           <div class="f"><label for="o2">Opção 2</label><input id="o2" maxlength="100"></div>
           <div class="f"><label for="o3">Opção 3</label><input id="o3" maxlength="100"></div>
+          <div class="sizes">
+            <p class="opt">Opcional: ajuda quem tirar você a acertar no tamanho.</p>
+            <div><label for="tRoupa">Tamanho de roupa</label><select id="tRoupa"><option value="">Não informar</option><option>PP</option><option>P</option><option>M</option><option>G</option><option>GG</option><option>XG</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option></select></div>
+            <div><label for="tCalc">Número do calçado</label><select id="tCalc"><option value="">Não informar</option><option>30</option><option>31</option><option>32</option><option>33</option><option>34</option><option>35</option><option>36</option><option>37</option><option>38</option><option>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option></select></div>
+          </div>
           <button class="gold" id="bOpt" type="submit">Salvar minhas 3 opções</button>
         </form>
         <p class="ok" id="okOpt"></p>
@@ -589,6 +601,7 @@ const fill = d => {
   $('inT').textContent = 'Oi, ' + d.nome + '!';
   const o = d.opcoes || [];
   ['o1','o2','o3'].forEach((k,i) => $(k).value = o[i] || '');
+  $('tRoupa').value = d.roupa || ''; $('tCalc').value = d.calcado || '';
   saved3 = o.length >= 3; markIdeas();
   $('pAdmin').style.display = d.admin ? 'block' : 'none'; $('okAdm').textContent = ''; $('eAdm').textContent = '';
   if (d.admin) renderAdminList();
@@ -612,6 +625,8 @@ const showFriend = (a, animate) => {
   const ul = $('frList'); ul.textContent = '';
   (a.opcoes || []).forEach(x => { const li = document.createElement('li'); li.textContent = x; ul.append(li); });
   $('frEmpty').style.display = (a.opcoes || []).length ? 'none' : 'block';
+  const sz = $('frSz'); sz.textContent = '';
+  [['Roupa', a.roupa], ['Calçado', a.calcado]].forEach(([l, v]) => { if (!v) return; const sp = document.createElement('span'); const b = document.createElement('b'); b.textContent = l; sp.append(b, ' ' + v); sz.append(sp); });
   $('cFriend').style.display = 'block';
 };
 
@@ -676,7 +691,7 @@ $('fOpt').addEventListener('submit', async e => {
   if (o.some(x => !x)) { $('eOpt').textContent = 'Preencha as 3 opções. Se faltar ideia, veja as sugestões.'; return; }
   busy($('bOpt'), true, 'Salvar minhas 3 opções');
   try {
-    const d = await rpc('ao_salvar_opcoes', {p_nome:me.nome, p_pin:me.pin, p_opcoes:o});
+    const d = await rpc('ao_salvar_perfil', {p_nome:me.nome, p_pin:me.pin, p_opcoes:o, p_roupa:$('tRoupa').value, p_calcado:$('tCalc').value});
     const first = !saved3;
     saved3 = (d.opcoes || []).length >= 3;
     $('okOpt').textContent = d.revelado ? 'Salvo! Quem tirou você já pode ver.' : 'Salvo! Agora o sorteio está liberado.';
