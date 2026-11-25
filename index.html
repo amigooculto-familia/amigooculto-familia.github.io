@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>Amigo Oculto Grande Família</title>
+<meta name="description" content="Escolha seu nome, crie sua senha e descubra seu amigo oculto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion, aconchegante de família, Natal
+   IDEA etiquetas de presente penduradas por fita, papel de embrulho vermelho
+   PICTURE os nomes viram etiquetas; depois uma etiqueta lacrada que vira e mostra o amigo
+   COLOUR vermelho de embrulho, papel branco, verde pinheiro, dourado na fita
+   TYPE DM Serif Display + Nunito
+   LAYOUT faixa vermelha com título; um cartão por passo numa coluna; no celular tudo empilhado */
+:root{color-scheme:light dark;--bg:light-dark(#fbf7f2,#0f1d18);--ink:light-dark(#1d1a19,#f4efe8);--red:light-dark(#b8102b,#8f0d22);--card:light-dark(#ffffff,#172a23);--line:light-dark(#e6ddd3,#2c443a);--green:light-dark(#0f5a3c,#6fd3a2);--gold:#e3a72a;--muted:light-dark(#6b625c,#b5ada4);--onGreen:light-dark(#fff,#0f1d18);--err:light-dark(#c4122f,#ff8a98)}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+.top{background:var(--red);color:#fff;padding:clamp(24px,4vw,44px) max(5vw,16px) 70px;position:relative;overflow:hidden}
+.top::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 26px,rgba(255,255,255,.07) 26px 30px)}
+.top .in{position:relative;max-width:640px;margin:0 auto;display:flex;gap:20px;align-items:center;justify-content:space-between}
+h1{font:400 clamp(32px,6vw,48px)/1.05 "DM Serif Display",Georgia,serif;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.top p{margin:10px 0 0;opacity:.92}
+.top p span{white-space:nowrap}
+.gift{flex:none;width:100px;height:100px}
+main{max-width:640px;margin:-48px auto 0;padding:0 max(5vw,16px) 48px;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,28px);box-shadow:0 8px 24px rgba(60,20,10,.08);margin-bottom:16px}
+h2{font:400 26px/1.15 "DM Serif Display",Georgia,serif;margin:0 0 6px}
+.hint{color:var(--muted);font-size:15px;margin:0 0 14px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.nm{position:relative;min-height:56px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font:800 17px Nunito,sans-serif;cursor:pointer;padding:8px 10px;text-align:center}
+.nm:hover{border-color:var(--gold)}
+.nm small{display:block;font-weight:600;font-size:13px;color:var(--muted)}
+label{display:block;font-weight:800;margin:0 0 6px}
+input{width:100%;font:16px/1.5 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px}
+.pin{font-size:28px;letter-spacing:.5em;text-align:center;max-width:220px;display:block;margin:0 auto 12px;padding-left:.5em}
+input:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:999px;border:0;font:800 16px Nunito,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.go{background:var(--green);color:var(--onGreen);width:100%;font-size:18px;min-height:54px}
+.go:hover{filter:brightness(1.08)}
+.go:disabled{opacity:.6;cursor:wait}
+.ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:600 15px Nunito,sans-serif;min-height:44px;padding:0}
+.err{color:var(--err);font-weight:800;margin:10px 0 0;text-align:center}
+.err:empty,.ok:empty{display:none}
+.ok{color:var(--green);font-weight:800;margin:10px 0 0}
+.f{margin-bottom:12px}
+.view{display:none}
+.center{text-align:center}
+.seal{width:100%;max-width:290px;aspect-ratio:1/1.2;margin:6px auto 18px;position:relative;perspective:900px}
+.flip{position:absolute;inset:0;transition:transform .8s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d}
+.seal.open .flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 18px 18px;clip-path:polygon(20% 0,80% 0,100% 12%,100% 100%,0 100%,0 12%)}
+.front{background:var(--red);color:#fff;background-image:repeating-linear-gradient(135deg,transparent 0 22px,rgba(255,255,255,.08) 22px 26px)}
+.back{background:var(--bg);border:2px solid var(--gold);transform:rotateY(180deg)}
+.face .hole{position:absolute;top:14px;width:16px;height:16px;border-radius:50%;border:4px solid var(--gold);background:var(--card)}
+.big{font:400 30px/1.1 "DM Serif Display",Georgia,serif}
+.who{font:400 clamp(34px,9vw,46px)/1.05 "DM Serif Display",Georgia,serif;margin:4px 0 6px;overflow-wrap:anywhere}
+.meta{font-size:15px;color:var(--muted)}
+.wish{text-align:left;padding:0;margin:0;list-style:none;display:grid;gap:8px}
+.wish li{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px 10px 34px;position:relative;overflow-wrap:anywhere}
+.wish li::before{content:"";position:absolute;left:14px;top:17px;width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:r 1s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes r{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.flip{transition:none}.spin{animation:none}}
+@media(max-width:440px){.gift{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <div>
+      <h1>Amigo Oculto Grande Família</h1>
+      <p id="info"><span>Presente de R$ 30 a R$ 50</span></p>
+    </div>
+    <svg class="gift" viewBox="0 0 120 120" aria-hidden="true">
+      <rect x="18" y="50" width="84" height="60" rx="6" fill="#fff"/>
+      <rect x="18" y="50" width="84" height="12" fill="#f1e6dc"/>
+      <rect x="12" y="38" width="96" height="18" rx="5" fill="#fff"/>
+      <rect x="52" y="38" width="16" height="72" fill="#e3a72a"/>
+      <path d="M60 38c-14-22-36-16-30-4 4 8 22 6 30 4zM60 38c14-22 36-16 30-4-4 8-22 6-30 4z" fill="#e3a72a"/>
+    </svg>
+  </div>
+</header>
+
+<main>
+  <!-- 1. escolher nome -->
+  <section id="vNames" class="view card">
+    <h2>Quem é você?</h2>
+    <p class="hint">Toque no seu nome.</p>
+    <div class="names" id="names"><p class="hint"><span class="spin"></span>Carregando...</p></div>
+    <p class="err" id="eNames" role="alert"></p>
+  </section>
+
+  <!-- 2. senha -->
+  <section id="vPin" class="view card center">
+    <h2 id="pinT">Oi!</h2>
+    <p class="hint" id="pinH"></p>
+    <form id="fPin" autocomplete="off">
+      <label for="pin1" id="pinL1">Senha de 4 números</label>
+      <input id="pin1" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+      <div id="pin2Box">
+        <label for="pin2">Repita a senha</label>
+        <input id="pin2" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+      </div>
+      <button class="btn go" id="bPin" type="submit">Entrar</button>
+    </form>
+    <p class="err" id="ePin" role="alert"></p>
+    <button class="link" id="bBack1" type="button">Não sou eu, voltar</button>
+  </section>
+
+  <!-- 3. dentro -->
+  <div id="vIn" class="view">
+    <section class="card center" id="cDraw">
+      <h2 id="inT">Oi!</h2>
+      <p class="hint" id="inH">Seu amigo oculto já está separado. Veja sem ninguém olhando.</p>
+      <div class="seal" id="seal">
+        <div class="flip">
+          <div class="face front"><span class="hole"></span><div class="big">Seu amigo oculto</div><div style="margin-top:8px;opacity:.9">está aqui dentro</div></div>
+          <div class="face back"><span class="hole"></span><div class="meta">Você tirou</div><div class="who" id="who"></div><div class="meta">Guarde segredo!</div></div>
+        </div>
+      </div>
+      <button class="btn go" id="bDraw">Sortear</button>
+      <p class="err" id="eDraw" role="alert"></p>
+    </section>
+
+    <section class="card" id="cFriend" style="display:none">
+      <h2 id="frT">O que ele quer ganhar</h2>
+      <ul class="wish" id="frList"></ul>
+      <p class="hint" id="frEmpty" style="display:none;margin:0">Ainda não colocou as opções. Entre de novo mais tarde pra ver.</p>
+    </section>
+
+    <section class="card">
+      <h2>Suas 3 opções de presente</h2>
+      <p class="hint">Quem tirou você vai ver essa lista. Pode mudar quando quiser.</p>
+      <form id="fOpt">
+        <div class="f"><label for="o1">Opção 1</label><input id="o1" maxlength="100" placeholder="ex.: perfume, livro, caneca..."></div>
+        <div class="f"><label for="o2">Opção 2</label><input id="o2" maxlength="100"></div>
+        <div class="f"><label for="o3">Opção 3</label><input id="o3" maxlength="100"></div>
+        <button class="btn go" id="bOpt" type="submit">Salvar minhas opções</button>
+      </form>
+      <p class="ok" id="okOpt"></p>
+      <p class="err" id="eOpt" role="alert"></p>
+    </section>
+
+    <div class="center"><button class="link" id="bOut" type="button">Sair</button></div>
+  </div>
+</main>
+
+<script>
+{
+const API = 'https://xntcanejmmsolrvgkuuc.supabase.co/rest/v1/rpc/';
+const KEY = 'sb_publishable_cJCMEY9TTCXF16pPWSn8IQ_4n_boANf';
+const $ = id => document.getElementById(id);
+const ERR = {
+  SENHA_FORMATO: 'A senha tem que ter 4 números.',
+  SENHA_ERRADA: 'Senha errada. Tente de novo.',
+  BLOQUEADO: 'Muitas tentativas erradas. Fale com o organizador pra liberar.',
+  NOME: 'Nome não encontrado.',
+  SEM_SORTEIO: 'O sorteio ainda não foi feito. Volte mais tarde!',
+  REDE: 'Sem conexão. Confira a internet e tente de novo.'
+};
+let me = {nome:'', pin:''}, pessoas = [];
+
+const rpc = async (fn, body) => {
+  let r;
+  try { r = await fetch(API + fn, {method:'POST', headers:{apikey:KEY, 'Content-Type':'application/json'}, body:JSON.stringify(body || {})}); }
+  catch(e) { throw new Error('REDE'); }
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) throw new Error('REDE');
+  if (j.erro) throw new Error(j.erro);
+  return j;
+};
+const msg = e => ERR[e.message] || ERR.REDE;
+const show = v => { for (const id of ['vNames','vPin','vIn']) $(id).style.display = id === v ? (id === 'vIn' ? 'block' : 'block') : 'none'; scrollTo(0,0); };
+const busy = (b, on, label) => { b.disabled = on; b.textContent = on ? 'Aguarde...' : label; };
+
+const loadNames = async () => {
+  show('vNames');
+  try {
+    const d = await rpc('ao_lista');
+    pessoas = d.pessoas || [];
+    const parts = [d.valor && ('Presente ' + d.valor), d.data && ('Troca em ' + d.data)].filter(Boolean);
+    const info = $('info'); info.textContent = '';
+    parts.forEach((t,i) => { if (i) info.append(' · '); const s = document.createElement('span'); s.textContent = t; info.append(s); });
+    const box = $('names'); box.textContent = '';
+    pessoas.forEach(p => {
+      const b = document.createElement('button'); b.className = 'nm'; b.type = 'button';
+      b.textContent = p.nome;
+      if (p.cadastrado) { const s = document.createElement('small'); s.textContent = 'já tem senha'; b.append(s); }
+      b.addEventListener('click', () => pickName(p));
+      box.append(b);
+    });
+    $('eNames').textContent = '';
+  } catch(e) {
+    $('names').textContent = '';
+    $('eNames').textContent = msg(e);
+  }
+};
+
+const pickName = p => {
+  me = {nome:p.nome, pin:'', novo:!p.cadastrado};
+  $('pinT').textContent = 'Oi, ' + p.nome + '!';
+  $('pinH').textContent = me.novo ? 'Primeira vez aqui. Crie uma senha de 4 números só sua, pra ninguém mais entrar no seu nome.' : 'Digite a sua senha.';
+  $('pinL1').textContent = me.novo ? 'Crie sua senha' : 'Sua senha';
+  $('pin2Box').style.display = me.novo ? 'block' : 'none';
+  $('pin1').value = ''; $('pin2').value = ''; $('ePin').textContent = '';
+  $('bPin').textContent = me.novo ? 'Criar senha e entrar' : 'Entrar';
+  show('vPin');
+  setTimeout(() => $('pin1').focus(), 50);
+};
+
+const fill = d => {
+  $('inT').textContent = 'Oi, ' + d.nome + '!';
+  const o = d.opcoes || [];
+  ['o1','o2','o3'].forEach((k,i) => $(k).value = o[i] || '');
+  if (d.revelado && d.amigo) showFriend(d.amigo, false);
+  else { $('seal').classList.remove('open'); $('bDraw').style.display = ''; $('cFriend').style.display = 'none'; $('inH').textContent = 'Seu amigo oculto já está separado. Veja sem ninguém olhando.'; }
+};
+const showFriend = (a, animate) => {
+  $('who').textContent = a.nome;
+  const seal = $('seal');
+  if (!animate) seal.querySelector('.flip').style.transition = 'none';
+  seal.classList.add('open');
+  if (!animate) setTimeout(() => seal.querySelector('.flip').style.transition = '', 50);
+  $('bDraw').style.display = 'none';
+  $('inH').textContent = 'Esse é o seu amigo oculto. Não conte pra ninguém!';
+  $('frT').textContent = 'O que ' + String(a.nome) + ' quer ganhar';
+  const ul = $('frList'); ul.textContent = '';
+  (a.opcoes || []).forEach(x => { const li = document.createElement('li'); li.textContent = x; ul.append(li); });
+  $('frEmpty').style.display = (a.opcoes || []).length ? 'none' : 'block';
+  $('cFriend').style.display = 'block';
+};
+
+$('fPin').addEventListener('submit', async e => {
+  e.preventDefault();
+  const p1 = $('pin1').value.trim(), p2 = $('pin2').value.trim();
+  if (!/^\d{4}$/.test(p1)) { $('ePin').textContent = ERR.SENHA_FORMATO; return; }
+  if (me.novo && p1 !== p2) { $('ePin').textContent = 'As duas senhas não são iguais.'; return; }
+  const label = $('bPin').textContent;
+  busy($('bPin'), true, label); $('ePin').textContent = '';
+  try {
+    const d = await rpc('ao_entrar', {p_nome:me.nome, p_pin:p1});
+    me.pin = p1;
+    try { localStorage.setItem('ao-nome', me.nome); } catch(_) {}
+    fill(d); show('vIn');
+  } catch(err) { $('ePin').textContent = msg(err); }
+  busy($('bPin'), false, label);
+});
+
+$('bDraw').addEventListener('click', async () => {
+  busy($('bDraw'), true, 'Sortear'); $('eDraw').textContent = '';
+  try {
+    const d = await rpc('ao_revelar', {p_nome:me.nome, p_pin:me.pin});
+    showFriend(d.amigo, true);
+  } catch(err) { $('eDraw').textContent = msg(err); busy($('bDraw'), false, 'Sortear'); }
+});
+
+$('fOpt').addEventListener('submit', async e => {
+  e.preventDefault();
+  const o = ['o1','o2','o3'].map(k => $(k).value.trim());
+  $('okOpt').textContent = ''; $('eOpt').textContent = '';
+  if (!o.some(Boolean)) { $('eOpt').textContent = 'Escreva pelo menos uma opção.'; return; }
+  busy($('bOpt'), true, 'Salvar minhas opções');
+  try { await rpc('ao_salvar_opcoes', {p_nome:me.nome, p_pin:me.pin, p_opcoes:o}); $('okOpt').textContent = 'Salvo! Quem tirou você já pode ver.'; }
+  catch(err) { $('eOpt').textContent = msg(err); }
+  busy($('bOpt'), false, 'Salvar minhas opções');
+});
+
+$('bBack1').addEventListener('click', loadNames);
+$('bOut').addEventListener('click', () => { me = {nome:'', pin:''}; loadNames(); });
+for (const id of ['pin1','pin2']) $(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); });
+
+loadNames();
+}
+</script>
+</body>
+</html>
