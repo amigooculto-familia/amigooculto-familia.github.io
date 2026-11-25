@@ -336,7 +336,7 @@ const ERR = {
   REDE: 'Sem conexão. Confira a internet e tente de novo.'
 };
 let me = {nome:'', pin:''}, pessoas = [], saved3 = false;
-const FOTOS = {paola:'paola', 'paulo victor':'paulo-victor', nicolly:'nicolly', lurdes:'lurdes', lourdes:'lurdes', marcia:'marcia', 'marcia barbara':'marcia', anderson:'anderson', luisa:'luisa', sandra:'sandra', wilton:'wilton', felipe:'felipe', fernanda:'fernanda', 'maria fernanda':'fernanda', amanda:'amanda', bethania:'bethania', alessandro:'alessandro', luan:'luan', luiz:'luiz', 'luiz mauricio':'luiz', nalanda:'nalanda', nicolas:'nicolas'};
+const FOTOS = {'ana paula':'ana-paula', 'maria alice':'maria-alice', 'luiz fernando':'luiz-fernando', paola:'paola', 'paulo victor':'paulo-victor', nicolly:'nicolly', lurdes:'lurdes', lourdes:'lurdes', marcia:'marcia', 'marcia barbara':'marcia', anderson:'anderson', luisa:'luisa', sandra:'sandra', wilton:'wilton', felipe:'felipe', fernanda:'fernanda', 'maria fernanda':'fernanda', amanda:'amanda', bethania:'bethania', alessandro:'alessandro', luan:'luan', luiz:'luiz', 'luiz mauricio':'luiz', nalanda:'nalanda', nicolas:'nicolas'};
 const keyOf = n => String(n).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const avatar = (nome, cls) => {
   const f = FOTOS[keyOf(nome)];
