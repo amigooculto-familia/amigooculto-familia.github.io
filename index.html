@@ -130,6 +130,18 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
 .ghost{width:100%;min-height:50px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:#fff;font:600 16px Outfit,sans-serif;cursor:pointer}
 .ghost.warn{border-color:#ff8a98;color:#ffd0d6}
 .ghost.armed{background:#8f1526;border-color:#ffb3bd;color:#fff}
+.adm-sec{margin-top:22px;padding-top:18px;border-top:1px dashed var(--line)}
+.adm-sec h3{font:700 20px Fraunces,serif;margin:0 0 10px;color:#fff}
+.addrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+select{width:100%;font:16px Outfit,sans-serif;color:#fff;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-height:50px}
+select option{background:#2a0710}
+.plist{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.plist li{display:flex;align-items:center;justify-content:space-between;gap:6px;background:rgba(0,0,0,.22);border:1px solid rgba(242,195,91,.25);border-radius:12px;padding:4px 4px 4px 12px;min-height:48px}
+.plist span{overflow-wrap:anywhere}
+.plist em{font-style:normal;font-size:12px;color:var(--gold)}
+.xbtn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#ffd0d6;font:600 18px Outfit,sans-serif;cursor:pointer}
+.xbtn.armed{width:auto;padding:0 10px;border-radius:999px;background:#8f1526;color:#fff;font-size:13px}
+@media(max-width:420px){.addrow{grid-template-columns:minmax(0,1fr)}}
 .music{font-size:13px;color:var(--muted);margin:10px 0 0}
 .foot{grid-column:1/-1;text-align:center;color:rgba(230,201,180,.6);font-size:13px;margin-top:10px}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:8px}.mroad{display:block;margin:0 0 12px}}
@@ -256,6 +268,20 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
         </div>
         <p class="ok" id="okAdm"></p>
         <p class="err" id="eAdm" role="alert"></p>
+        <div class="adm-sec">
+          <h3>Participantes</h3>
+          <p class="hint">Dá pra incluir e tirar gente mesmo com o sorteio rolando. Quem já viu o resultado continua com a mesma pessoa.</p>
+          <form id="fAdd" autocomplete="off">
+            <div class="addrow">
+              <div><label for="aNome">Nome novo</label><input id="aNome" maxlength="30" placeholder="ex.: Joana"></div>
+              <div><label for="aPar">Não pode tirar (casal)</label><select id="aPar"><option value="">Ninguém</option></select></div>
+            </div>
+            <button class="gold" id="bAdd" type="submit">Adicionar ao sorteio</button>
+          </form>
+          <ul class="plist" id="plist"></ul>
+          <p class="ok" id="okP"></p>
+          <p class="err" id="eP" role="alert"></p>
+        </div>
       </div>
       <div class="center"><button class="link" id="bOut" type="button">Sair</button></div>
     </div>
@@ -276,6 +302,11 @@ const ERR = {
   BLOQUEADO: 'Muitas tentativas erradas. Fale com o organizador pra liberar.',
   NOME: 'Nome não encontrado.',
   NAO_ADMIN: 'Só o organizador pode fazer isso.',
+  JA_EXISTE: 'Esse nome já está na lista.',
+  NOME_VAZIO: 'Escreva o nome.',
+  SEM_ENCAIXE: 'Não deu pra encaixar sem quebrar as regras dos casais. Tente sem marcar o casal.',
+  POUCOS: 'Precisa ficar pelo menos 3 pessoas.',
+  NAO_SI: 'O organizador não pode se tirar da lista.',
   SEM_OPCOES: 'Salve suas 3 opções de presente antes de sortear.',
   SEM_SORTEIO: 'O sorteio ainda não foi feito. Volte mais tarde!',
   REDE: 'Sem conexão. Confira a internet e tente de novo.'
@@ -539,6 +570,7 @@ const fill = d => {
   ['o1','o2','o3'].forEach((k,i) => $(k).value = o[i] || '');
   saved3 = o.length >= 3; markIdeas();
   $('pAdmin').style.display = d.admin ? 'block' : 'none'; $('okAdm').textContent = ''; $('eAdm').textContent = '';
+  if (d.admin) renderAdminList();
   layout(!!(d.revelado && d.amigo));
   $('okOpt').textContent = ''; $('eOpt').textContent = ''; $('eDraw').textContent = '';
   if (d.revelado && d.amigo) showFriend(d.amigo, false); else resetStage();
@@ -647,6 +679,7 @@ const adminBtn = (id, tudo, label) => {
         $('okAdm').textContent = 'Tudo zerado e sorteio novo feito. Voltando pra lista...';
         await sleep(1600); me = {nome:'', pin:''}; loadNames();
       } else {
+        await refreshPessoas();
         const d = await rpc('ao_entrar', {p_nome:me.nome, p_pin:me.pin});
         fill(d); $('okAdm').textContent = 'Sorteio refeito! Ninguém viu o novo resultado ainda.';
       }
@@ -654,6 +687,53 @@ const adminBtn = (id, tudo, label) => {
     b.disabled = false; b.textContent = label;
   });
 };
+const refreshPessoas = async () => { try { const d = await rpc('ao_lista'); pessoas = d.pessoas || []; } catch(_) {} };
+const pArmed = {};
+const renderAdminList = () => {
+  const ul = $('plist'); ul.textContent = '';
+  const sel = $('aPar'), keep = sel.value; sel.textContent = '';
+  const o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Ninguém'; sel.append(o0);
+  pessoas.forEach(p => {
+    const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome; sel.append(o);
+    const li = document.createElement('li');
+    const sp = document.createElement('span'); sp.textContent = p.nome;
+    if (p.nome === me.nome) { const em = document.createElement('em'); em.textContent = ' (você)'; sp.append(em); }
+    li.append(sp);
+    if (p.nome !== me.nome) {
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'xbtn'; x.textContent = '×'; x.setAttribute('aria-label', 'Tirar ' + p.nome);
+      x.addEventListener('click', async () => {
+        $('okP').textContent = ''; $('eP').textContent = '';
+        if (!pArmed[p.nome]) { pArmed[p.nome] = true; x.classList.add('armed'); x.textContent = 'Tirar?'; setTimeout(() => { pArmed[p.nome] = false; x.classList.remove('armed'); x.textContent = '×'; }, 4000); return; }
+        x.disabled = true; x.textContent = '...';
+        try {
+          const r = await rpc('ao_admin_del', {p_nome:me.nome, p_pin:me.pin, p_alvo:p.nome});
+          await afterAdmin(p.nome + ' saiu do sorteio.' + (r.res === 'RESETOU1' ? ' Quem tinha tirado ' + p.nome + ' vai sortear de novo.' : ''));
+        } catch(err) { $('eP').textContent = msg(err); x.disabled = false; x.textContent = '×'; }
+      });
+      li.append(x);
+    }
+    ul.append(li);
+  });
+  sel.value = pessoas.some(p => p.nome === keep) ? keep : '';
+};
+const afterAdmin = async okText => {
+  await refreshPessoas();
+  try { const d = await rpc('ao_entrar', {p_nome:me.nome, p_pin:me.pin}); fill(d); } catch(_) { renderAdminList(); }
+  $('okP').textContent = okText;
+};
+$('fAdd').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('okP').textContent = ''; $('eP').textContent = '';
+  const n = $('aNome').value.trim().replace(/\s+/g, ' ');
+  if (!n) { $('eP').textContent = ERR.NOME_VAZIO; return; }
+  busy($('bAdd'), true, 'Adicionar ao sorteio');
+  try {
+    const r = await rpc('ao_admin_add', {p_nome:me.nome, p_pin:me.pin, p_novo:n, p_par:$('aPar').value});
+    $('aNome').value = ''; $('aPar').value = '';
+    await afterAdmin(r.nome + ' entrou no sorteio!' + (r.res === 'RESETOU1' ? ' Uma pessoa que já tinha sorteado vai sortear de novo.' : ''));
+  } catch(err) { $('eP').textContent = msg(err); }
+  busy($('bAdd'), false, 'Adicionar ao sorteio');
+});
 adminBtn('bRedo', false, 'Refazer só o sorteio');
 adminBtn('bWipe', true, 'Zerar tudo: senhas, opções e sorteio');
 $('bBack1').addEventListener('click', loadNames);
