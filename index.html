@@ -100,6 +100,19 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
 .wish li::before{content:counter(w);position:absolute;left:12px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 15px Fraunces,serif;color:#3b1d02;background:linear-gradient(180deg,#ffe9a8,#d9a23f)}
 .spin{display:inline-block;width:20px;height:20px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:r 1s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes r{to{transform:rotate(360deg)}}
+#vIn.on{display:flex;flex-direction:column;gap:18px}
+#vIn .panel+.panel{margin-top:0}
+.steplbl{display:inline-flex;align-items:center;gap:8px;font:600 12px Outfit,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 8px}
+.steplbl b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#3b1d02;background:linear-gradient(180deg,#ffe9a8,#d9a23f);font:700 13px Fraunces,serif;letter-spacing:0}
+.ideas-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;margin:0 0 14px;border-radius:999px;border:1px dashed var(--gold);background:rgba(242,195,91,.08);color:var(--gold);font:600 15px Outfit,sans-serif;cursor:pointer}
+.ideas{display:none;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(242,195,91,.2)}
+.ideas.open{display:flex}
+.ideas p{width:100%;margin:0 0 4px;font-size:14px;color:var(--muted)}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font:500 15px Outfit,sans-serif;cursor:pointer}
+.chip:hover{background:rgba(242,195,91,.14);border-color:var(--gold)}
+.chip.used{opacity:.4}
+.lock{color:var(--muted);font-size:14px;margin:12px 0 0}
+.lock:empty{display:none}
 .foot{grid-column:1/-1;text-align:center;color:rgba(230,201,180,.6);font-size:13px;margin-top:10px}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:18px}}
 @media(max-width:420px){.coin{width:92px;height:92px}.coin b{font-size:19px}.sound span{display:none}}
@@ -162,7 +175,8 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
 
     <!-- 3. dentro -->
     <div id="vIn" class="view">
-      <div class="panel center">
+      <div class="panel center" id="pDraw">
+        <p class="steplbl" id="stepDraw"><b>2</b>Sorteio</p>
         <h2 id="inT">Oi!</h2>
         <p class="hint" id="inH">Seu amigo oculto está guardado neste envelope. Aumente o som e aperte o botão.</p>
         <div class="stage" id="stage">
@@ -187,6 +201,7 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
           </div>
         </div>
         <button class="gold" id="bDraw" type="button">Sortear</button>
+        <p class="lock" id="lock"></p>
         <p class="err" id="eDraw" role="alert"></p>
       </div>
 
@@ -196,14 +211,17 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
         <p class="hint" id="frEmpty" style="display:none;margin:0">Ainda não colocou as opções. Entre de novo mais tarde pra ver.</p>
       </div>
 
-      <div class="panel">
-        <h2>Suas 3 opções de presente</h2>
-        <p class="hint">Quem tirou você vai ver essa lista. Pode mudar quando quiser.</p>
+      <div class="panel" id="pOpt">
+        <p class="steplbl" id="stepOpt"><b>1</b>Antes de sortear</p>
+        <h2>O que você gostaria de ganhar?</h2>
+        <p class="hint">Coloque 3 opções de até R$ 50. Quem tirar você vai ver essa lista. Depois de salvar, o sorteio libera.</p>
+        <button class="ideas-btn" id="bIdeas" type="button" aria-expanded="false" aria-controls="ideas">Sem ideia? Ver sugestões</button>
+        <div class="ideas" id="ideas"><p>Toque numa ideia pra colocar na próxima opção vazia.</p></div>
         <form id="fOpt">
           <div class="f"><label for="o1">Opção 1</label><input id="o1" maxlength="100" placeholder="ex.: perfume, livro, caneca..."></div>
           <div class="f"><label for="o2">Opção 2</label><input id="o2" maxlength="100"></div>
           <div class="f"><label for="o3">Opção 3</label><input id="o3" maxlength="100"></div>
-          <button class="gold" id="bOpt" type="submit">Salvar minhas opções</button>
+          <button class="gold" id="bOpt" type="submit">Salvar minhas 3 opções</button>
         </form>
         <p class="ok" id="okOpt"></p>
         <p class="err" id="eOpt" role="alert"></p>
@@ -226,10 +244,12 @@ const ERR = {
   SENHA_ERRADA: 'Senha errada. Tente de novo.',
   BLOQUEADO: 'Muitas tentativas erradas. Fale com o organizador pra liberar.',
   NOME: 'Nome não encontrado.',
+  SEM_OPCOES: 'Salve suas 3 opções de presente antes de sortear.',
   SEM_SORTEIO: 'O sorteio ainda não foi feito. Volte mais tarde!',
   REDE: 'Sem conexão. Confira a internet e tente de novo.'
 };
-let me = {nome:'', pin:''}, pessoas = [];
+let me = {nome:'', pin:''}, pessoas = [], saved3 = false;
+const IDEAS = ['Carteira','Capa de celular','Perfume','Caneca personalizada','Livro','Chocolate fino','Camiseta','Meias divertidas','Fone de ouvido','Garrafa térmica','Necessaire','Kit de skincare','Hidratante','Vela aromática','Porta-retrato','Chinelo','Boné','Pantufa','Pijama','Jogo de tabuleiro','Kit churrasco','Cinto','Óculos de sol','Carregador portátil','Agenda 2027','Planta suculenta','Bolsa pequena','Kit de unhas','Copo térmico','Avental de cozinha','Mousepad','Toalha de praia'];
 
 /* ---------- neve ---------- */
 const snow = $('snow'), sc = snow.getContext('2d');
@@ -343,7 +363,7 @@ const rpc = async (fn, body) => {
   return j;
 };
 const msg = e => ERR[e.message] || ERR.REDE;
-const show = v => { for (const id of ['vNames','vPin','vIn']) $(id).style.display = id === v ? 'block' : 'none'; if (innerWidth < 860) $(v).scrollIntoView({block:'start'}); };
+const show = v => { for (const id of ['vNames','vPin','vIn']) { $(id).style.display = id === v ? (id === 'vIn' ? 'flex' : 'block') : 'none'; } $('vIn').classList.toggle('on', v === 'vIn'); if (innerWidth < 860) $(v).scrollIntoView({block:'start'}); };
 const busy = (b, on, label) => { b.disabled = on; b.textContent = on ? 'Aguarde...' : label; };
 
 const loadNames = async () => {
@@ -375,10 +395,34 @@ const pickName = p => {
   setTimeout(() => $('pin1').focus(), 60);
 };
 
+const layout = revealed => {
+  const v = $('vIn'), pOpt = $('pOpt'), pDraw = $('pDraw'), fr = $('cFriend');
+  if (revealed) { v.prepend(pDraw); pDraw.after(fr); fr.after(pOpt); $('stepOpt').style.display = 'none'; $('stepDraw').style.display = 'none'; }
+  else { v.prepend(pOpt); pOpt.after(pDraw); pDraw.after(fr); $('stepOpt').style.display = ''; $('stepDraw').style.display = ''; }
+};
+const lockDraw = () => {
+  const b = $('bDraw');
+  if (saved3) { b.disabled = false; b.textContent = 'Sortear'; $('lock').textContent = ''; }
+  else { b.disabled = true; b.textContent = 'Sortear'; $('lock').textContent = 'O botão libera quando você salvar suas 3 opções aqui em cima.'; }
+};
+const markIdeas = () => { const vals = ['o1','o2','o3'].map(k => $(k).value.trim().toLowerCase()); document.querySelectorAll('.chip').forEach(c => c.classList.toggle('used', vals.includes(c.textContent.toLowerCase()))); };
+IDEAS.forEach(t => {
+  const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = t;
+  c.addEventListener('click', () => {
+    const ids = ['o1','o2','o3'], vals = ids.map(k => $(k).value.trim());
+    if (vals.some(v => v.toLowerCase() === t.toLowerCase())) return;
+    const free = ids.find(k => !$(k).value.trim());
+    if (!free) { $('eOpt').textContent = 'As 3 opções já estão preenchidas. Apague uma pra trocar.'; return; }
+    $(free).value = t; $('eOpt').textContent = ''; markIdeas();
+  });
+  $('ideas').append(c);
+});
+$('bIdeas').addEventListener('click', () => { const o = $('ideas').classList.toggle('open'); $('bIdeas').setAttribute('aria-expanded', String(o)); $('bIdeas').textContent = o ? 'Fechar sugestões' : 'Sem ideia? Ver sugestões'; });
+['o1','o2','o3'].forEach(k => $(k).addEventListener('input', markIdeas));
 const resetStage = () => {
   const st = $('stage'); st.classList.remove('open','rolling');
   $('slotCap').textContent = 'Seu amigo oculto'; $('slot').textContent = 'está aqui dentro';
-  $('bDraw').style.display = ''; $('bDraw').disabled = false; $('bDraw').textContent = 'Sortear';
+  $('bDraw').style.display = ''; lockDraw();
   $('cFriend').style.display = 'none';
   $('inH').textContent = 'Seu amigo oculto está guardado neste envelope. Aumente o som e aperte o botão.';
 };
@@ -386,6 +430,8 @@ const fill = d => {
   $('inT').textContent = 'Oi, ' + d.nome + '!';
   const o = d.opcoes || [];
   ['o1','o2','o3'].forEach((k,i) => $(k).value = o[i] || '');
+  saved3 = o.length >= 3; markIdeas();
+  layout(!!(d.revelado && d.amigo));
   $('okOpt').textContent = ''; $('eOpt').textContent = ''; $('eDraw').textContent = '';
   if (d.revelado && d.amigo) showFriend(d.amigo, false); else resetStage();
 };
@@ -432,7 +478,10 @@ $('bDraw').addEventListener('click', async () => {
     const d = await req;
     crash(); confetti();
     showFriend(d.amigo, true);
+    $('stepOpt').style.display = 'none'; $('stepDraw').style.display = 'none';
+    $('cFriend').after($('pOpt'));
   } catch(err) {
+    if (err.message === 'SEM_OPCOES') saved3 = false;
     stopAudio(); resetStage(); $('eDraw').textContent = msg(err);
   }
 });
@@ -460,11 +509,16 @@ $('fOpt').addEventListener('submit', async e => {
   e.preventDefault();
   const o = ['o1','o2','o3'].map(k => $(k).value.trim());
   $('okOpt').textContent = ''; $('eOpt').textContent = '';
-  if (!o.some(Boolean)) { $('eOpt').textContent = 'Escreva pelo menos uma opção.'; return; }
-  busy($('bOpt'), true, 'Salvar minhas opções');
-  try { await rpc('ao_salvar_opcoes', {p_nome:me.nome, p_pin:me.pin, p_opcoes:o}); $('okOpt').textContent = 'Salvo! Quem tirou você já pode ver.'; }
-  catch(err) { $('eOpt').textContent = msg(err); }
-  busy($('bOpt'), false, 'Salvar minhas opções');
+  if (o.some(x => !x)) { $('eOpt').textContent = 'Preencha as 3 opções. Se faltar ideia, veja as sugestões.'; return; }
+  busy($('bOpt'), true, 'Salvar minhas 3 opções');
+  try {
+    const d = await rpc('ao_salvar_opcoes', {p_nome:me.nome, p_pin:me.pin, p_opcoes:o});
+    const first = !saved3;
+    saved3 = (d.opcoes || []).length >= 3;
+    $('okOpt').textContent = d.revelado ? 'Salvo! Quem tirou você já pode ver.' : 'Salvo! Agora o sorteio está liberado.';
+    if (!d.revelado) { lockDraw(); if (first) setTimeout(() => $('pDraw').scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'center'}), 400); }
+  } catch(err) { $('eOpt').textContent = msg(err); }
+  busy($('bOpt'), false, 'Salvar minhas 3 opções');
 });
 
 $('bBack1').addEventListener('click', loadNames);
