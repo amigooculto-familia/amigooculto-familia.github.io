@@ -139,6 +139,8 @@ select option{background:#2a0710}
 .plist li{display:flex;align-items:center;justify-content:space-between;gap:6px;background:rgba(0,0,0,.22);border:1px solid rgba(242,195,91,.25);border-radius:12px;padding:4px 4px 4px 12px;min-height:48px}
 .plist span{overflow-wrap:anywhere}
 .plist em{font-style:normal;font-size:12px;color:var(--gold)}
+.plist .tg{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.plh{grid-column:1/-1;margin:10px 0 2px;font:600 12px Outfit,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
 .xbtn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#ffd0d6;font:600 18px Outfit,sans-serif;cursor:pointer}
 .xbtn.armed{width:auto;padding:0 10px;border-radius:999px;background:#8f1526;color:#fff;font-size:13px}
 @media(max-width:420px){.addrow{grid-template-columns:minmax(0,1fr)}}
@@ -294,12 +296,13 @@ select option{background:#2a0710}
         <p class="err" id="eAdm" role="alert"></p>
         <div class="adm-sec">
           <h3>Participantes</h3>
-          <p class="hint">Dá pra incluir e tirar gente mesmo com o sorteio rolando. Quem já viu o resultado continua com a mesma pessoa.</p>
+          <p class="hint">Cada turma sorteia só entre si. Dá pra incluir e tirar gente mesmo com o sorteio rolando.</p>
           <form id="fAdd" autocomplete="off">
             <div class="addrow">
               <div><label for="aNome">Nome novo</label><input id="aNome" maxlength="30" placeholder="ex.: Joana"></div>
               <div><label for="aPar">Casal de</label><select id="aPar"><option value="">Ninguém</option></select></div>
             </div>
+            <div class="f"><label for="aGrupo">Turma</label><select id="aGrupo"><option value="campos">Campos</option><option value="outros">Outra turma</option></select></div>
             <button class="gold" id="bAdd" type="submit">Adicionar ao sorteio</button>
           </form>
           <ul class="plist" id="plist"></ul>
@@ -731,8 +734,11 @@ const renderAdminList = () => {
   const ul = $('plist'); ul.textContent = '';
   const sel = $('aPar'), keep = sel.value; sel.textContent = '';
   const o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Ninguém'; sel.append(o0);
-  pessoas.forEach(p => {
+  const ord = [...pessoas].sort((a, b) => (a.grupo === b.grupo ? 0 : a.grupo === 'campos' ? -1 : 1) || a.nome.localeCompare(b.nome));
+  let lastG = null;
+  ord.forEach(p => {
     const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome; sel.append(o);
+    if (p.grupo !== lastG) { lastG = p.grupo; const h = document.createElement('li'); h.className = 'plh'; h.textContent = p.grupo === 'outros' ? 'Outra turma' : 'Campos'; h.style.cssText = 'background:none;border:0;min-height:0;padding:0'; ul.append(h); }
     const li = document.createElement('li');
     const wrap = document.createElement('span'); wrap.className = 'who2';
     const sp = document.createElement('span'); sp.textContent = p.nome;
@@ -767,7 +773,7 @@ $('fAdd').addEventListener('submit', async e => {
   if (!n) { $('eP').textContent = ERR.NOME_VAZIO; return; }
   busy($('bAdd'), true, 'Adicionar ao sorteio');
   try {
-    const r = await rpc('ao_admin_add', {p_nome:me.nome, p_pin:me.pin, p_novo:n, p_par:$('aPar').value});
+    const r = await rpc('ao_admin_add', {p_nome:me.nome, p_pin:me.pin, p_novo:n, p_par:$('aPar').value, p_grupo:$('aGrupo').value});
     $('aNome').value = ''; $('aPar').value = '';
     await afterAdmin(r.nome + ' entrou no sorteio!' + (r.res === 'RESETOU1' ? ' Uma pessoa que já tinha sorteado vai sortear de novo.' : ''));
   } catch(err) { $('eP').textContent = msg(err); }
