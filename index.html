@@ -113,10 +113,28 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
 .chip.used{opacity:.4}
 .lock{color:var(--muted);font-size:14px;margin:12px 0 0}
 .lock:empty{display:none}
+.mroad{display:none}
+.slot.num{font:700 clamp(84px,24vw,112px)/1 Fraunces,serif;background:linear-gradient(180deg,#fff6d6,#f2c35b 55%,#d39a35);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 18px rgba(242,195,91,.55))}
+.slot.pulse{animation:pulse .9s ease-out}
+@keyframes pulse{0%{transform:scale(1.9);opacity:0}25%{opacity:1}100%{transform:scale(1);opacity:1}}
+.bulbs{position:absolute;inset:-14px;pointer-events:none;z-index:3;display:none}
+.stage.lit .bulbs{display:block}
+.bulb{position:absolute;width:12px;height:17px;margin:-8px 0 0 -6px;border-radius:50% 50% 45% 45%;opacity:.35;animation:tw 1.1s ease-in-out infinite alternate}
+.bulb::before{content:"";position:absolute;left:3px;top:-4px;width:6px;height:5px;border-radius:2px;background:#5a4a2a}
+@keyframes tw{to{opacity:1;box-shadow:0 0 12px 4px currentColor}}
+.wire{position:absolute;inset:0;border:2px solid rgba(40,60,30,.8);border-radius:28px}
+.stage.lit .back{animation:glow 2.4s ease-in-out infinite alternate}
+@keyframes glow{from{box-shadow:0 0 40px rgba(242,195,91,.35),0 20px 50px rgba(0,0,0,.45)}to{box-shadow:0 0 90px rgba(242,195,91,.65),0 20px 50px rgba(0,0,0,.45)}}
+.admin{border-style:dashed}
+.admin .row2{display:grid;gap:10px}
+.ghost{width:100%;min-height:50px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:#fff;font:600 16px Outfit,sans-serif;cursor:pointer}
+.ghost.warn{border-color:#ff8a98;color:#ffd0d6}
+.ghost.armed{background:#8f1526;border-color:#ffb3bd;color:#fff}
+.music{font-size:13px;color:var(--muted);margin:10px 0 0}
 .foot{grid-column:1/-1;text-align:center;color:rgba(230,201,180,.6);font-size:13px;margin-top:10px}
-@media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:18px}}
+@media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.santa{display:none}.lead{margin-bottom:8px}.mroad{display:block;margin:0 0 12px}}
 @media(max-width:420px){.coin{width:92px;height:92px}.coin b{font-size:19px}.sound span{display:none}}
-@media(prefers-reduced-motion:reduce){.flip{transition:none}.spin,.santa,.walker,.walker img,.stage.rolling .box{animation:none}.walker{left:calc(50% - 56px)}}
+@media(prefers-reduced-motion:reduce){.flip{transition:none}.spin,.santa,.walker,.walker img,.stage.rolling .box,.bulb,.slot.pulse,.stage.lit .back{animation:none}.walker{left:calc(50% - 56px)}}
 </style>
 </head>
 <body>
@@ -136,6 +154,7 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
     <p class="eyebrow">Sorteio secreto da família</p>
     <h1><span class="t">Amigo Oculto</span><span class="s">Grande Família</span></h1>
     <p class="lead">Escolha seu nome, crie sua senha e descubra quem você vai presentear. Só você vê o seu.</p>
+    <div class="road mroad" aria-hidden="true"><div class="walker"><img src="papai-noel.png" alt=""></div></div>
     <div class="badges">
       <div class="coin"><b>R$ 30<br>a 50</b><small>presente</small></div>
       <div class="count">
@@ -180,6 +199,7 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
         <h2 id="inT">Oi!</h2>
         <p class="hint" id="inH">Seu amigo oculto está guardado neste envelope. Aumente o som e aperte o botão.</p>
         <div class="stage" id="stage">
+          <div class="bulbs" id="bulbs"><div class="wire"></div></div>
           <div class="flip">
             <div class="face front">
               <svg class="box" viewBox="0 0 120 120" aria-hidden="true">
@@ -226,6 +246,17 @@ input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3p
         <p class="ok" id="okOpt"></p>
         <p class="err" id="eOpt" role="alert"></p>
       </div>
+      <div class="panel admin" id="pAdmin" style="display:none">
+        <p class="steplbl">Só para o organizador</p>
+        <h2>Painel do admin</h2>
+        <p class="hint">Pra fazer testes. Toque duas vezes pra confirmar.</p>
+        <div class="row2">
+          <button class="ghost" id="bRedo" type="button">Refazer só o sorteio</button>
+          <button class="ghost warn" id="bWipe" type="button">Zerar tudo: senhas, opções e sorteio</button>
+        </div>
+        <p class="ok" id="okAdm"></p>
+        <p class="err" id="eAdm" role="alert"></p>
+      </div>
       <div class="center"><button class="link" id="bOut" type="button">Sair</button></div>
     </div>
   </section>
@@ -244,6 +275,7 @@ const ERR = {
   SENHA_ERRADA: 'Senha errada. Tente de novo.',
   BLOQUEADO: 'Muitas tentativas erradas. Fale com o organizador pra liberar.',
   NOME: 'Nome não encontrado.',
+  NAO_ADMIN: 'Só o organizador pode fazer isso.',
   SEM_OPCOES: 'Salve suas 3 opções de presente antes de sortear.',
   SEM_SORTEIO: 'O sorteio ainda não foi feito. Volte mais tarde!',
   REDE: 'Sem conexão. Confira a internet e tente de novo.'
@@ -287,11 +319,11 @@ const tick = () => {
 tick(); setInterval(tick, 1000);
 
 /* ---------- som ---------- */
-let soundOn = true, ac = null;
+let soundOn = true, ac = null, drawing = false;
 try { soundOn = localStorage.getItem('ao-som') !== 'off'; } catch(_) {}
 const paintSound = () => { $('sTxt').textContent = soundOn ? 'Som ligado' : 'Som desligado'; $('sWave').style.display = soundOn ? '' : 'none'; $('bSound').setAttribute('aria-pressed', String(soundOn)); };
 paintSound();
-$('bSound').addEventListener('click', () => { soundOn = !soundOn; try { localStorage.setItem('ao-som', soundOn ? 'on' : 'off'); } catch(_) {} paintSound(); });
+$('bSound').addEventListener('click', () => { soundOn = !soundOn; try { localStorage.setItem('ao-som', soundOn ? 'on' : 'off'); } catch(_) {} paintSound(); if (!soundOn) stopMusic(); else { musicDone = true; if (!drawing) startMusic(); } });
 const audio = () => { if (!soundOn) return null; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); return ac; } catch(_) { return null; } };
 const noiseBuf = c => { const b = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; };
 let master = null;
@@ -331,10 +363,85 @@ const crash = () => {
     b.connect(bg).connect(c.destination); b.start(st); b.stop(st + 1.3);
   });
 };
+/* Jingle Bells (domínio público) bem baixinho */
+let music = null;
+const JB = 'E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 E1 D1 D1 E1 D2 G2 E1 E1 E2 E1 E1 E2 E1 G1 C1.5 D.5 E4 F1 F1 F1.5 F.5 F1 E1 E1 E.5 E.5 G1 G1 F1 D1 C4 R4'.split(' ');
+const FQ = {C:523.25, D:587.33, E:659.25, F:698.46, G:783.99};
+const startMusic = () => {
+  if (music || !soundOn) return;
+  const c = audio(); if (!c) return;
+  const g = c.createGain(); g.gain.value = .045; g.connect(c.destination);
+  music = {g, timer:null, on:true};
+  const beat = .32;
+  const loop = () => {
+    if (!music || !music.on) return;
+    let t = c.currentTime + .08;
+    for (const n of JB) {
+      const k = n[0], d = parseFloat(n.slice(1)) * beat;
+      if (k !== 'R') {
+        const f = FQ[k];
+        [[1,1],[2,.35],[3.01,.12]].forEach(([m,v]) => {
+          const o = c.createOscillator(), og = c.createGain();
+          o.type = 'sine'; o.frequency.value = f * m;
+          og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(v, t + .006); og.gain.exponentialRampToValueAtTime(.0008, t + Math.max(.35, d * 1.3));
+          o.connect(og).connect(g); o.start(t); o.stop(t + Math.max(.4, d * 1.4));
+        });
+      }
+      t += d;
+    }
+    music.timer = setTimeout(loop, (t - c.currentTime - .3) * 1000);
+  };
+  loop();
+};
+const stopMusic = () => {
+  if (!music) return;
+  music.on = false; clearTimeout(music.timer);
+  try { music.g.gain.setTargetAtTime(0, ac.currentTime, .15); } catch(_) {}
+  music = null;
+};
+let musicDone = false;
+const kick = () => { if (musicDone) return; musicDone = true; startMusic(); ['pointerdown','keydown','touchstart'].forEach(e => removeEventListener(e, kick)); };
+['pointerdown','keydown','touchstart'].forEach(e => addEventListener(e, kick, {passive:true}));
 const stopAudio = () => { if (master && ac) { try { master.gain.setValueAtTime(0, ac.currentTime); } catch(_) {} } };
 
 /* ---------- confete dourado ---------- */
 const fx = $('fx'), fc = fx.getContext('2d');
+const LIGHTS = ['#ff3b4f','#ffd25e','#3ddc84','#4fc3ff','#ff8ad8','#fff4d6'];
+const bulbsOn = () => {
+  const box = $('bulbs'); box.querySelectorAll('.bulb').forEach(b => b.remove());
+  const W = 100, H = 112, per = 2*(W+H), n = 30;
+  for (let i=0;i<n;i++) {
+    let d = per * i / n, x, y;
+    if (d < W) { x = d; y = 0; } else if ((d -= W) < H) { x = W; y = d; } else if ((d -= H) < W) { x = W - d; y = H; } else { d -= W; x = 0; y = H - d; }
+    const b = document.createElement('i'); b.className = 'bulb';
+    const col = LIGHTS[i % 5]; b.style.cssText = 'left:' + x + '%;top:' + (y / H * 100) + '%;background:' + col + ';color:' + col + ';animation-delay:' + (i % 2 ? .55 : 0) + 's';
+    box.append(b);
+  }
+  $('stage').classList.add('lit');
+};
+const lightsBurst = () => {
+  if (RM) return;
+  const d = Math.min(devicePixelRatio || 1, 2), W = innerWidth, H = innerHeight;
+  fx.width = W*d; fx.height = H*d; fc.setTransform(d,0,0,d,0,0);
+  const r = $('stage').getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const mk = n => Array.from({length:n}, () => { const a = Math.random()*Math.PI*2, v = 1.5 + Math.random()*6; return {x:cx + Math.cos(a)*40, y:cy + Math.sin(a)*40, vx:Math.cos(a)*v, vy:Math.sin(a)*v, s:2 + Math.random()*3.5, c:LIGHTS[Math.floor(Math.random()*LIGHTS.length)], tw:Math.random()*6}; });
+  let ps = mk(140); const t0 = performance.now(); let second = false;
+  const step = now => {
+    const el = now - t0;
+    if (!second && el > 900) { ps = ps.concat(mk(110)); second = true; }
+    fc.clearRect(0,0,W,H);
+    fc.globalCompositeOperation = 'lighter';
+    for (const p of ps) {
+      p.vx *= .985; p.vy = p.vy * .985 + .03; p.x += p.vx; p.y += p.vy; p.tw += .25;
+      const a = Math.max(0, 1 - el/4200) * (.6 + .4*Math.sin(p.tw));
+      fc.globalAlpha = a; fc.shadowBlur = 16; fc.shadowColor = p.c; fc.fillStyle = p.c;
+      fc.beginPath(); fc.arc(p.x, p.y, p.s, 0, Math.PI*2); fc.fill();
+    }
+    fc.globalCompositeOperation = 'source-over'; fc.shadowBlur = 0; fc.globalAlpha = 1;
+    if (el < 4200) requestAnimationFrame(step); else fc.clearRect(0,0,W,H);
+  };
+  requestAnimationFrame(step);
+};
 const confetti = () => {
   if (RM) return;
   const d = Math.min(devicePixelRatio || 1, 2), W = innerWidth, H = innerHeight;
@@ -421,7 +528,7 @@ $('bIdeas').addEventListener('click', () => { const o = $('ideas').classList.tog
 ['o1','o2','o3'].forEach(k => $(k).addEventListener('input', markIdeas));
 const resetStage = () => {
   const st = $('stage'); st.classList.remove('open','rolling');
-  $('slotCap').textContent = 'Seu amigo oculto'; $('slot').textContent = 'está aqui dentro';
+  $('slotCap').textContent = 'Seu amigo oculto'; $('slot').textContent = 'está aqui dentro'; $('slot').classList.remove('num','pulse'); st.classList.remove('lit');
   $('bDraw').style.display = ''; lockDraw();
   $('cFriend').style.display = 'none';
   $('inH').textContent = 'Seu amigo oculto está guardado neste envelope. Aumente o som e aperte o botão.';
@@ -431,6 +538,7 @@ const fill = d => {
   const o = d.opcoes || [];
   ['o1','o2','o3'].forEach((k,i) => $(k).value = o[i] || '');
   saved3 = o.length >= 3; markIdeas();
+  $('pAdmin').style.display = d.admin ? 'block' : 'none'; $('okAdm').textContent = ''; $('eAdm').textContent = '';
   layout(!!(d.revelado && d.amigo));
   $('okOpt').textContent = ''; $('eOpt').textContent = ''; $('eDraw').textContent = '';
   if (d.revelado && d.amigo) showFriend(d.amigo, false); else resetStage();
@@ -441,7 +549,7 @@ const showFriend = (a, animate) => {
   st.classList.remove('rolling');
   if (!animate) fl.style.transition = 'none';
   st.classList.add('open');
-  if (!animate) setTimeout(() => fl.style.transition = '', 60);
+  if (!animate) { setTimeout(() => fl.style.transition = '', 60); requestAnimationFrame(() => bulbsOn()); }
   $('bDraw').style.display = 'none';
   $('inH').textContent = 'Esse é o seu amigo oculto. Não conte pra ninguém!';
   const first = String(a.nome).split(' ')[0];
@@ -454,35 +562,36 @@ const showFriend = (a, animate) => {
 
 /* ---------- suspense do sorteio ---------- */
 const suspense = async () => {
-  const DUR = RM ? 1200 : 3600;
-  const pool = pessoas.map(p => p.nome).filter(n => n !== me.nome);
-  $('stage').classList.add('rolling');
-  $('slotCap').textContent = 'Sorteando...';
-  drumroll(DUR / 1000);
-  const t0 = performance.now(); let last = '';
-  while (performance.now() - t0 < DUR) {
-    const p = (performance.now() - t0) / DUR;
-    let n; do { n = pool[Math.floor(Math.random()*pool.length)] || '?'; } while (pool.length > 1 && n === last);
-    last = n; $('slot').textContent = n;
-    await sleep(55 + 300 * p * p);
+  const st = $('stage'), slot = $('slot');
+  st.classList.add('rolling');
+  st.scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'center'});
+  $('slotCap').textContent = 'Seu amigo oculto em...';
+  slot.classList.add('num');
+  drumroll(5);
+  for (const n of [5,4,3,2,1]) {
+    slot.textContent = String(n);
+    slot.classList.remove('pulse'); void slot.offsetWidth; slot.classList.add('pulse');
+    await sleep(1000);
   }
 };
-
 $('bDraw').addEventListener('click', async () => {
   const b = $('bDraw'); b.disabled = true; b.textContent = 'Rufem os tambores...'; $('eDraw').textContent = '';
-  audio();
+  drawing = true; stopMusic(); audio();
   const req = rpc('ao_revelar', {p_nome:me.nome, p_pin:me.pin});
   req.catch(() => {});
   await suspense();
   try {
     const d = await req;
-    crash(); confetti();
+    crash();
     showFriend(d.amigo, true);
     $('stepOpt').style.display = 'none'; $('stepDraw').style.display = 'none';
     $('cFriend').after($('pOpt'));
+    $('stage').scrollIntoView({behavior:'auto', block:'center'});
+    setTimeout(() => { bulbsOn(); lightsBurst(); }, RM ? 0 : 650);
   } catch(err) {
     if (err.message === 'SEM_OPCOES') saved3 = false;
     stopAudio(); resetStage(); $('eDraw').textContent = msg(err);
+  } finally { drawing = false;
   }
 });
 
@@ -521,6 +630,32 @@ $('fOpt').addEventListener('submit', async e => {
   busy($('bOpt'), false, 'Salvar minhas 3 opções');
 });
 
+const armed = {};
+const adminBtn = (id, tudo, label) => {
+  const b = $(id);
+  b.addEventListener('click', async () => {
+    $('okAdm').textContent = ''; $('eAdm').textContent = '';
+    if (!armed[id]) {
+      armed[id] = true; b.classList.add('armed'); b.textContent = 'Toque de novo para confirmar';
+      setTimeout(() => { armed[id] = false; b.classList.remove('armed'); b.textContent = label; }, 4000);
+      return;
+    }
+    armed[id] = false; b.classList.remove('armed'); b.disabled = true; b.textContent = 'Aguarde...';
+    try {
+      await rpc('ao_admin_resetar', {p_nome:me.nome, p_pin:me.pin, p_tudo:tudo});
+      if (tudo) {
+        $('okAdm').textContent = 'Tudo zerado e sorteio novo feito. Voltando pra lista...';
+        await sleep(1600); me = {nome:'', pin:''}; loadNames();
+      } else {
+        const d = await rpc('ao_entrar', {p_nome:me.nome, p_pin:me.pin});
+        fill(d); $('okAdm').textContent = 'Sorteio refeito! Ninguém viu o novo resultado ainda.';
+      }
+    } catch(err) { $('eAdm').textContent = msg(err); }
+    b.disabled = false; b.textContent = label;
+  });
+};
+adminBtn('bRedo', false, 'Refazer só o sorteio');
+adminBtn('bWipe', true, 'Zerar tudo: senhas, opções e sorteio');
 $('bBack1').addEventListener('click', loadNames);
 $('bOut').addEventListener('click', () => { me = {nome:'', pin:''}; loadNames(); });
 for (const id of ['pin1','pin2']) $(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,4); });
