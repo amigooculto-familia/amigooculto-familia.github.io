@@ -302,7 +302,7 @@ select option{background:#2a0710}
               <div><label for="aNome">Nome novo</label><input id="aNome" maxlength="30" placeholder="ex.: Joana"></div>
               <div><label for="aPar">Casal de</label><select id="aPar"><option value="">Ninguém</option></select></div>
             </div>
-            <div class="f"><label for="aGrupo">Turma</label><select id="aGrupo"><option value="campos">Campos</option><option value="outros">Outra turma</option></select></div>
+            <div class="f"><label for="aGrupo">Turma</label><select id="aGrupo"><option value="campos">Campos</option><option value="outros">Outra turma</option><option value="ambos">As duas turmas</option></select></div>
             <button class="gold" id="bAdd" type="submit">Adicionar ao sorteio</button>
           </form>
           <ul class="plist" id="plist"></ul>
@@ -734,11 +734,12 @@ const renderAdminList = () => {
   const ul = $('plist'); ul.textContent = '';
   const sel = $('aPar'), keep = sel.value; sel.textContent = '';
   const o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Ninguém'; sel.append(o0);
-  const ord = [...pessoas].sort((a, b) => (a.grupo === b.grupo ? 0 : a.grupo === 'campos' ? -1 : 1) || a.nome.localeCompare(b.nome));
+  const GO = {campos:0, outros:1, ambos:2}, GN = {campos:'Campos', outros:'Outra turma', ambos:'As duas turmas'};
+  const ord = [...pessoas].sort((a, b) => ((GO[a.grupo] ?? 0) - (GO[b.grupo] ?? 0)) || a.nome.localeCompare(b.nome));
   let lastG = null;
   ord.forEach(p => {
     const o = document.createElement('option'); o.value = p.nome; o.textContent = p.nome; sel.append(o);
-    if (p.grupo !== lastG) { lastG = p.grupo; const h = document.createElement('li'); h.className = 'plh'; h.textContent = p.grupo === 'outros' ? 'Outra turma' : 'Campos'; h.style.cssText = 'background:none;border:0;min-height:0;padding:0'; ul.append(h); }
+    if (p.grupo !== lastG) { lastG = p.grupo; const h = document.createElement('li'); h.className = 'plh'; h.textContent = GN[p.grupo] || 'Campos'; h.style.cssText = 'background:none;border:0;min-height:0;padding:0'; ul.append(h); }
     const li = document.createElement('li');
     const wrap = document.createElement('span'); wrap.className = 'who2';
     const sp = document.createElement('span'); sp.textContent = p.nome;
