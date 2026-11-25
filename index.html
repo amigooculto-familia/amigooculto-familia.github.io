@@ -66,7 +66,15 @@ input:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2p
 .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:r 1s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes r{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.flip{transition:none}.spin{animation:none}}
+.road{position:relative;height:128px;margin:-6px -6px 8px;overflow:hidden;border-bottom:3px dotted var(--line)}
+.walker{position:absolute;bottom:2px;left:0;width:118px;animation:walk 12s linear infinite}
+.walker img{display:block;width:100%;height:auto;transform-origin:50% 100%;animation:hop .42s ease-in-out infinite alternate}
+@keyframes walk{0%{left:0;transform:scaleX(1)}47%{left:calc(100% - 118px);transform:scaleX(1)}50%{left:calc(100% - 118px);transform:scaleX(-1)}97%{left:0;transform:scaleX(-1)}100%{left:0;transform:scaleX(1)}}
+@keyframes hop{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-9px) rotate(3deg)}}
+.road.happy .walker{animation-play-state:paused}
+.road.happy .walker img{animation:jump .35s ease-out 3 alternate}
+@keyframes jump{to{transform:translateY(-26px)}}
+@media(prefers-reduced-motion:reduce){.flip{transition:none}.spin{animation:none}.walker,.walker img{animation:none}.walker{left:calc(50% - 59px)}}
 @media(max-width:440px){.gift{display:none}}
 </style>
 </head>
@@ -98,6 +106,7 @@ input:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2p
 
   <!-- 2. senha -->
   <section id="vPin" class="view card center">
+    <div class="road" id="road" aria-hidden="true"><div class="walker"><img src="papai-noel.png" alt=""></div></div>
     <h2 id="pinT">Oi!</h2>
     <p class="hint" id="pinH"></p>
     <form id="fPin" autocomplete="off">
@@ -247,7 +256,11 @@ $('fPin').addEventListener('submit', async e => {
     const d = await rpc('ao_entrar', {p_nome:me.nome, p_pin:p1});
     me.pin = p1;
     try { localStorage.setItem('ao-nome', me.nome); } catch(_) {}
-    fill(d); show('vIn');
+    fill(d);
+    $('road').classList.add('happy');
+    await new Promise(r => setTimeout(r, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1000));
+    $('road').classList.remove('happy');
+    show('vIn');
   } catch(err) { $('ePin').textContent = msg(err); }
   busy($('bPin'), false, label);
 });
